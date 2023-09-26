@@ -1,0 +1,40 @@
+﻿services:
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - /Users/rhull/Documents/development/json/nginx.conf
+      - ~/ssl:/ssl/
+  vulnerablequestions:
+    image: vulnerablequestions
+    build:
+      context: .
+      dockerfile: VulnerableQuestions/Dockerfile
+    ports:
+      - "5001:80"
+    links:
+      - mongodb
+    depends_on: 
+      - mongodb
+    environment:
+      - 'VulnerableQuestionsDatabase__ConnectionString=mongodb://vqdb:27017/'
+      - 'ApiUrls__CommonUrl=http://localhost:5001/api/vulnerablequestions/'
+    networks:
+      - vq-webapp-network
+  mongodb:
+    container_name: vqdb
+    image: mongodb/mongodb-community-server
+    volumes:
+      - ~/mongo:/data/db
+    ports:
+      - "27017:27017"
+    restart: on-failure
+    networks:
+      - vq-webapp-network
+networks:
+  vq-webapp-network:
+    driver: bridge
